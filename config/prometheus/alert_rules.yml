@@ -1,0 +1,65 @@
+# config/prometheus/alert_rules.yml
+groups:
+  - name: ai_inference_alerts
+    rules:
+      - alert: HighInferenceLatency
+        expr: histogram_quantile(0.95, ai_inference_duration_seconds_bucket) > 1.0
+        for: 2m
+        labels:
+          severity: warning
+          component: ai-inference
+        annotations:
+          summary: "High AI inference latency"
+          description: "95th percentile latency is {{ $value }}s for model {{ $labels.model_name }}"
+
+      - alert: LowConfidenceScores
+        expr: histogram_quantile(0.50, ai_inference_confidence_bucket) < 0.7
+        for: 5m
+        labels:
+          severity: warning
+          component: ai-inference
+        annotations:
+          summary: "Low confidence scores in AI predictions"
+          description: "Median confidence is {{ $value }} for model {{ $labels.model_name }}"
+
+      - alert: HighAIErrorRate
+        expr: rate(ai_inference_errors_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          component: ai-inference
+        annotations:
+          summary: "High error rate in AI inference"
+          description: "Error rate is {{ $value }} errors/second for model {{ $labels.model_name }}"
+
+      - alert: AIInferenceModuleDown
+        expr: up{job="ai-inference-modules"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: ai-inference
+        annotations:
+          summary: "AI inference module is down"
+          description: "AI inference module {{ $labels.instance }} has been down for more than 1 minute"
+
+  - name: infrastructure_alerts
+    rules:
+      - alert: InfluxDBDown
+        expr: up{job="influxdb"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: infrastructure
+        annotations:
+          summary: "InfluxDB is down"
+          description: "InfluxDB has been down for more than 1 minute"
+
+      - alert: PrometheusDown
+        expr: up{job="prometheus"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: infrastructure
+        annotations:
+          summary: "Prometheus is down"
+          description: "Prometheus has been down for more than 1 minute"

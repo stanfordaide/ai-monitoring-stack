@@ -1,0 +1,42 @@
+# config/prometheus/prometheus.yml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "alert_rules.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Pushgateway for AI inference metrics
+  - job_name: 'ai-inference-pushgateway'
+    static_configs:
+      - targets: ['prometheus-pushgateway:9091']
+    scrape_interval: 5s
+    honor_labels: true
+
+  # Infrastructure monitoring
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000']
+
+  - job_name: 'influxdb'
+    static_configs:
+      - targets: ['influxdb:8086']
+
+  # AI inference modules (if they expose /metrics endpoint)
+  - job_name: 'ai-inference-modules'
+    static_configs:
+      - targets: []  # Add your AI module endpoints here
+    metrics_path: '/metrics'
+    scrape_interval: 10s

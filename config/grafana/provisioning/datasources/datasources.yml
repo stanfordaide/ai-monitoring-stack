@@ -1,0 +1,33 @@
+apiVersion: 1
+
+datasources:
+  # Existing Graphite (Mercure orchestrator metrics)
+  - name: mercure-graphite
+    type: graphite
+    access: proxy
+    url: http://graphite:80
+    isDefault: false
+    jsonData:
+      graphiteVersion: "1.1"
+    
+  # New InfluxDB (AI inference SPC metrics)
+  - name: ai-inference-influxdb
+    type: influxdb
+    access: proxy
+    url: http://influxdb:8086
+    isDefault: false
+    jsonData:
+      version: Flux
+      organization: mercure-ai
+      defaultBucket: ai-inference-spc
+    secureJsonData:
+      token: ai-inference-token-12345
+
+  # New Prometheus (AI inference real-time metrics)
+  - name: ai-inference-prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    jsonData:
+      timeInterval: "5s"

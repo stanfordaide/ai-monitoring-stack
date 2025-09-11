@@ -1,0 +1,187 @@
+# docker-compose.monitoring.yml
+version: "3.8"
+
+services:
+  # Existing Grafana (enhanced)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    networks:
+      - grafana-net
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning
+      - ./config/grafana/dashboards:/var/lib/grafana/dashboards
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=helloaide123
+      # - GF_INSTALL_PLUGINS=grafana-spc-panel,natel-discrete-panel,grafana-plotly-panel,grafana-worldmap-panel
+    depends_on:
+      - graphite
+      - influxdb
+      - prometheus
+
+  # Existing Graphite (for Mercure orchestrator)
+  graphite:
+    image: graphiteapp/graphite-statsd:latest
+    container_name: graphite
+    restart: always
+    ports:
+      - "2003-2004:2003-2004"
+      - "2023-2024:2023-2024"
+      - "8125:8125/udp"
+      - "8126:8126"
+      # - "8080:80"  # Web interface
+    networks:
+      - grafana-net
+    volumes:
+      - graphite_conf:/opt/graphite/conf
+      - graphite_storage:/opt/graphite/storage
+      - graphite_statsd:/opt/statsd/config
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # New: InfluxDB for AI inference detailed SPC metrics
+  influxdb:
+    image: influxdb:2.7
+    container_name: influxdb
+    restart: always
+    ports:
+      - "8086:8086"
+    networks:
+      - grafana-net
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=helloaide123
+      - DOCKER_INFLUXDB_INIT_ORG=mercure-ai
+      - DOCKER_INFLUXDB_INIT_BUCKET=ai-inference-spc
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=ai-inference-token-12345
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+      - influxdb_config:/etc/influxdb2
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # New: Prometheus for AI inference real-time metrics
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    networks:
+      - grafana-net
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    volumes:
+      - prometheus_data:/prometheus
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./config/prometheus/alert_rules.yml:/etc/prometheus/alert_rules.yml
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # New: Prometheus Pushgateway for AI inference batch jobs
+  prometheus-pushgateway:
+    image: prom/pushgateway:latest
+    container_name: prometheus-pushgateway
+    restart: always
+    ports:
+      - "9091:9091"
+    networks:
+      - grafana-net
+
+  # New: AlertManager for Prometheus alerts
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: alertmanager
+    restart: always
+    ports:
+      - "9093:9093"
+    networks:
+      - grafana-net
+    volumes:
+      - alertmanager_data:/alertmanager
+      - ./config/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+
+networks:
+  grafana-net:
+    driver: bridge
+
+volumes:
+  grafana_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/monitoring/grafana/data
+  influxdb_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/monitoring/influxdb/data
+  influxdb_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/monitoring/influxdb/config
+  prometheus_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/monitoring/prometheus/data
+  alertmanager_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/monitoring/alertmanager/data
+  pushgateway_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/monitoring/pushgateway/data
+  graphite_conf:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/monitoring/graphite/conf
+  graphite_storage:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/monitoring/graphite/storage
+  graphite_statsd:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/monitoring/graphite/statsd_config
