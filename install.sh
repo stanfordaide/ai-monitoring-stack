@@ -237,7 +237,7 @@ display_access_info() {
     echo "   Password: helloaide123"
     echo ""
     echo "📈 Prometheus:"
-    echo "   URL: http://localhost:9090"
+    echo "   URL: http://localhost:9092"
     echo ""
     echo "📊 InfluxDB:"
     echo "   URL: http://localhost:8086"

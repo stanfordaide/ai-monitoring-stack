@@ -124,7 +124,7 @@ show_status() {
 check_service_health() {
     local services=(
         "grafana:3000:/api/health:Grafana"
-        "prometheus:9090/-/healthy:Prometheus"
+        "prometheus:9092/-/healthy:Prometheus"
         "influxdb:8086/ping:InfluxDB"
         "alertmanager:9093/-/healthy:AlertManager"
         "prometheus-pushgateway:9091/-/healthy:Pushgateway"
@@ -364,7 +364,7 @@ show_access_info() {
     echo -e "   Password: helloaide123\n"
     
     echo -e "${CYAN}📈 Prometheus:${NC}"
-    echo -e "   URL: http://localhost:9090\n"
+    echo -e "   URL: http://localhost:9092\n"
     
     echo -e "${CYAN}📊 InfluxDB:${NC}"
     echo -e "   URL: http://localhost:8086"

@@ -77,7 +77,7 @@ services:
     container_name: prometheus
     restart: always
     ports:
-      - "9090:9090"
+      - "9092:9090"
     networks:
       - grafana-net
     command:
