@@ -98,6 +98,12 @@ copy_files() {
         chmod +x "$TARGET_DIR/monitoring-manager.sh"
     fi
     
+    # Copy README file
+    if [[ -f "$SCRIPT_DIR/README.md" ]]; then
+        log "Copying README file..."
+        cp "$SCRIPT_DIR/README.md" "$TARGET_DIR/"
+    fi
+    
     # Copy config directory
     if [[ -d "$SCRIPT_DIR/config" ]]; then
         log "Copying config directory..."
