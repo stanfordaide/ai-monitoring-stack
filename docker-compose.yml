@@ -1,5 +1,4 @@
 # docker-compose.monitoring.yml
-version: "3.8"
 
 services:
   # Existing Grafana (enhanced)
@@ -136,52 +135,52 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: /opt/monitoring/grafana/data
+      device: ./monitoring-binds/grafana/data
   influxdb_data:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: /opt/monitoring/influxdb/data
+      device: ./monitoring-binds/influxdb/data
   influxdb_config:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: /opt/monitoring/influxdb/config
+      device: ./monitoring-binds/influxdb/config
   prometheus_data:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: /opt/monitoring/prometheus/data
+      device: ./monitoring-binds/prometheus/data
   alertmanager_data:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: /opt/monitoring/alertmanager/data
+      device: ./monitoring-binds/alertmanager/data
   pushgateway_data:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: /opt/monitoring/pushgateway/data
+      device: ./monitoring-binds/pushgateway/data
   graphite_conf:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: /opt/monitoring/graphite/conf
+      device: ./monitoring-binds/graphite/conf
   graphite_storage:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: /opt/monitoring/graphite/storage
+      device: ./monitoring-binds/graphite/storage
   graphite_statsd:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: /opt/monitoring/graphite/statsd_config
+      device: ./monitoring-binds/graphite/statsd_config
