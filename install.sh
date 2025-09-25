@@ -171,6 +171,45 @@ set_permissions() {
     # Make sure docker-compose.yml is readable
     chmod 644 "$TARGET_DIR/docker-compose.yml"
     
+    # Set specific permissions for Docker containers that run as non-root users
+    log "Setting Docker container-specific permissions..."
+    
+    # Grafana runs as UID 472
+    if [[ -d "$TARGET_DIR/monitoring-binds/grafana" ]]; then
+        chown -R 472:472 "$TARGET_DIR/monitoring-binds/grafana"
+        log "Set Grafana permissions (UID 472)"
+    fi
+    
+    # Prometheus runs as UID 65534 (nobody)
+    if [[ -d "$TARGET_DIR/monitoring-binds/prometheus" ]]; then
+        chown -R 65534:65534 "$TARGET_DIR/monitoring-binds/prometheus"
+        log "Set Prometheus permissions (UID 65534)"
+    fi
+    
+    # AlertManager runs as UID 65534 (nobody)
+    if [[ -d "$TARGET_DIR/monitoring-binds/alertmanager" ]]; then
+        chown -R 65534:65534 "$TARGET_DIR/monitoring-binds/alertmanager"
+        log "Set AlertManager permissions (UID 65534)"
+    fi
+    
+    # Pushgateway runs as UID 65534 (nobody)
+    if [[ -d "$TARGET_DIR/monitoring-binds/pushgateway" ]]; then
+        chown -R 65534:65534 "$TARGET_DIR/monitoring-binds/pushgateway"
+        log "Set Pushgateway permissions (UID 65534)"
+    fi
+    
+    # InfluxDB runs as UID 1000
+    if [[ -d "$TARGET_DIR/monitoring-binds/influxdb" ]]; then
+        chown -R 1000:1000 "$TARGET_DIR/monitoring-binds/influxdb"
+        log "Set InfluxDB permissions (UID 1000)"
+    fi
+    
+    # Graphite runs as root, so keep default ownership but ensure it's writable
+    if [[ -d "$TARGET_DIR/monitoring-binds/graphite" ]]; then
+        chmod -R 755 "$TARGET_DIR/monitoring-binds/graphite"
+        log "Set Graphite permissions"
+    fi
+    
     log_success "Permissions set successfully"
 }
 
